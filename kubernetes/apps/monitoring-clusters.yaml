@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-clusters
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            clusterType: 'prow'
+  template:
+    metadata:
+      name: 'monitoring-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true,IncludeMutationWebhook=true
+    spec:
+      destination:
+        namespace: monitoring
+        server: "{{ .server }}"
+      project: default
+      sources:
+        - chart: kube-prometheus-stack
+          repoURL: https://prometheus-community.github.io/helm-charts
+          targetRevision: 62.3.1
+          helm:
+            releaseName: monitoring
+            valueFiles:
+              - $values/kubernetes/{{ .name }}/helm/monitoring.yaml
+        - repoURL: https://github.com/elieser1101/k8s.io
+          targetRevision: observability-stack-dev
+          ref: values
+        # dont need at the moment the httproute config for local development
+        #- path: kubernetes/{{ .name }}/monitoring/
+        #  repoURL: https://github.com/elieser1101/k8s.io
+        #  targetRevision: observability-stack-dev
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        managedNamespaceMetadata:
+          labels:
+            istio-injection: enabled

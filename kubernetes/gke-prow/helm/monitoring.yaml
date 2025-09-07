@@ -1,0 +1,35 @@
+grafana:
+  enabled: false
+
+prometheus:
+  thanosService:
+    enabled: false
+  prometheusSpec:
+    externalLabels:
+      cluster: gke-prow
+      cloud: gke
+#    thanos:
+#      image: quay.io/thanos/thanos:v0.36.1
+#      listenLocal: false
+#      logLevel: debug
+#      objectStorageConfig:
+#        secret:
+#          type: S3
+#          config:
+#            bucket: thanos
+#            endpoint: thanos-minio.monitoring.svc.cluster.local:9000
+#            access_key: minio
+#            secret_key: minio123
+#            insecure: true
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+# These endpoints aren't scrapable on GKE
+coreDns:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
